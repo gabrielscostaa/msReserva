@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Interface de Microserviços</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    h2 { margin-top: 40px; }
+    form { margin-bottom: 20px; }
+    input, button { margin: 5px; padding: 6px; }
+    pre { background: #eee; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Microserviços - Interface</h1>
+
+  <!-- Usuário -->
+  <h2>Usuários</h2>
+  <form id="usuarioForm">
+    <input type="text" id="nomeUsuario" placeholder="Nome" required />
+    <input type="email" id="emailUsuario" placeholder="Email" required />
+    <button type="submit">Cadastrar Usuário</button>
+  </form>
+  <button onclick="listarUsuarios()">Listar Usuários</button>
+  <pre id="usuariosList"></pre>
+
+  <!-- Sala -->
+  <h2>Salas</h2>
+  <form id="salaForm">
+    <input type="text" id="nomeSala" placeholder="Nome da Sala" required />
+    <button type="submit">Cadastrar Sala</button>
+  </form>
+  <button onclick="listarSalas()">Listar Salas</button>
+  <pre id="salasList"></pre>
+
+  <!-- Reserva -->
+  <h2>Reservas</h2>
+  <form id="reservaForm">
+    <input type="number" id="usuarioId" placeholder="ID do Usuário" required />
+    <input type="number" id="salaId" placeholder="ID da Sala" required />
+    <button type="submit">Fazer Reserva</button>
+  </form>
+  <button onclick="listarReservas()">Listar Reservas</button>
+  <pre id="reservasList"></pre>
+
+  <script>
+    const apiUsuario = 'http://localhost:8084/usuarios';
+    const apiSala = 'http://localhost:8082/salas';
+    const apiReserva = 'http://localhost:8083/reservas';
+
+    // Usuário
+    document.getElementById('usuarioForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('nomeUsuario').value;
+      const email = document.getElementById('emailUsuario').value;
+
+      await fetch(apiUsuario, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email })
+      });
+      listarUsuarios();
+    });
+
+    async function listarUsuarios() {
+      const res = await fetch(apiUsuario);
+      const data = await res.json();
+      document.getElementById('usuariosList').textContent = JSON.stringify(data, null, 2);
+    }
+
+    // Sala
+    document.getElementById('salaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('nomeSala').value;
+
+      await fetch(apiSala, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome })
+      });
+      listarSalas();
+    });
+
+    async function listarSalas() {
+      const res = await fetch(apiSala);
+      const data = await res.json();
+      document.getElementById('salasList').textContent = JSON.stringify(data, null, 2);
+    }
+
+    // Reserva
+    document.getElementById('reservaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const usuario_id = document.getElementById('usuarioId').value;
+      const sala_id = document.getElementById('salaId').value;
+
+      await fetch(apiReserva, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id, sala_id })
+      });
+      listarReservas();
+    });
+
+    async function listarReservas() {
+      const res = await fetch(apiReserva);
+      const data = await res.json();
+      document.getElementById('reservasList').textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

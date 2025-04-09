@@ -1,0 +1,131 @@
+services:
+  usuarios:
+    restart: always
+    container_name: usuarios
+    build:
+      context: ./usuario/
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://usuariosDb:5432/usuariosdb
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+      - SERVER_PORT=8084
+    ports:
+      - "8084:8084"
+    depends_on:
+      - Dbusuarios
+    networks:
+      - net_usuarios
+    
+  Dbusuarios:
+    image: postgres:latest
+    restart: always
+    container_name: dbusuarios
+    environment:
+      POSTGRES_DB: usuariosdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5431:5432"
+    networks:
+      - net_usuarios
+      - adminer-net
+
+  salas:
+    restart: always
+    container_name: salas
+    build:
+      context: ./sala/
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://dbsalas:5432/dbsalas
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+      - SERVER_PORT=8082
+    ports:
+      - "8082:8082"
+    depends_on:
+      - Dbsalas
+    networks:
+      - net_salas
+  
+  Dbsalas:
+    image: postgres:latest
+    restart: always
+    container_name: dbsalas
+    environment:
+      POSTGRES_DB: dbsalas
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    networks:
+      - net_salas
+      - adminer-net
+
+  reservas:
+    restart: always
+    container_name: reservas
+    build:
+      context: ./reserva/
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://Dbreservas:5432/dbreservas
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+      - SERVER_PORT=8083
+    ports:
+      - "8083:8083"
+    depends_on:
+      - Dbreservas
+    networks:
+      - net_reservas
+  
+  Dbreservas:
+    image: postgres:latest
+    restart: always
+    container_name: dbreservas
+    environment:
+      POSTGRES_DB: dbreservas
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5433:5432"
+    networks:
+      - net_reservas
+      - adminer-net
+
+  adminer:
+    container_name: adminer
+    restart: always
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    networks:
+      - adminer-net
+  
+
+networks:
+  adminer-net:
+    driver: bridge
+  net_usuarios:
+    driver: bridge
+  net_salas:
+    driver: bridge
+  net_reservas:
+    driver: bridge
