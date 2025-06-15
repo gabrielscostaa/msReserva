@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard de Microserviços</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* --- CSS Variables para fácil customização --- */
+    :root {
+      --bg-color: #f7f8fc;
+      --card-bg-color: #ffffff;
+      --primary-text-color: #2c3e50;
+      --secondary-text-color: #7f8c8d;
+      --accent-color: #3498db;
+      --accent-color-hover: #2980b9;
+      --delete-color: #e74c3c;
+      --delete-color-hover: #c0392b;
+      --border-color: #ecf0f1;
+      --shadow-color: rgba(0, 0, 0, 0.05);
+      --success-color: #2ecc71;
+      --error-color: #e74c3c;
+    }
+
+    /* --- Estilos Gerais --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--primary-text-color);
+      line-height: 1.6;
+    }
+
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    /* --- Layout dos Cards --- */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+    }
+
+    .card {
+      background-color: var(--card-bg-color);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px var(--shadow-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card h2 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+
+    /* --- Estilos de Formulário --- */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+    }
+
+    button {
+      padding: 12px 15px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    button.btn-primary { background-color: var(--accent-color); }
+    button.btn-primary:hover { background-color: var(--accent-color-hover); }
+
+    /* --- Estilos de Tabela e Ações --- */
+    .list-container {
+        flex-grow: 1;
+        max-height: 350px;
+        overflow-y: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    th, td {
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    th {
+        font-weight: 600;
+        color: var(--secondary-text-color);
+        position: sticky;
+        top: 0;
+        background: var(--card-bg-color);
+    }
+    td.actions { display: flex; justify-content: flex-end; }
+    .btn-delete {
+        background-color: var(--delete-color);
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+    .btn-delete:hover { background-color: var(--delete-color-hover); }
+    .empty-state { text-align: center; padding: 20px; color: var(--secondary-text-color); }
+
+    /* --- Notificação (Toast) --- */
+    #toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 500; opacity: 0; visibility: hidden; transform: translateY(20px); transition: all 0.3s ease-in-out; z-index: 1000; }
+    #toast.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    #toast.success { background-color: var(--success-color); }
+    #toast.error { background-color: var(--error-color); }
+
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    <h1>Dashboard de Gerenciamento</h1>
+
+    <div class="cards-grid">
+      <!-- Card de Usuários -->
+      <div class="card">
+        <h2>Usuários</h2>
+        <form id="usuarioForm">
+          <input type="text" id="nomeUsuario" placeholder="Nome do usuário" required />
+          <input type="email" id="emailUsuario" placeholder="Email do usuário" required />
+          <button type="submit" class="btn-primary">Cadastrar Usuário</button>
+        </form>
+        <div id="usuariosListContainer" class="list-container">
+            <p class="empty-state">Carregando usuários...</p>
+        </div>
+      </div>
+
+      <!-- Card de Salas -->
+      <div class="card">
+        <h2>Salas</h2>
+        <form id="salaForm">
+          <input type="text" id="nomeSala" placeholder="Nome da sala" required />
+          <button type="submit" class="btn-primary">Cadastrar Sala</button>
+        </form>
+        <div id="salasListContainer" class="list-container">
+            <p class="empty-state">Carregando salas...</p>
+        </div>
+      </div>
+
+      <!-- Card de Reservas -->
+      <div class="card">
+        <h2>Reservas</h2>
+        <form id="reservaForm">
+          <!-- O ideal aqui seria usar um <select> populado com os usuários e salas -->
+          <input type="number" id="usuarioId" placeholder="ID do Usuário" required />
+          <input type="number" id="salaId" placeholder="ID da Sala" required />
+          <button type="submit" class="btn-primary">Fazer Reserva</button>
+        </form>
+        <div id="reservasListContainer" class="list-container">
+            <p class="empty-state">Carregando reservas...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const baseUrl = '/api';
+    const apiUsuario = `${baseUrl}/usuarios`;
+    const apiSala = `${baseUrl}/salas`;
+    const apiReserva = `${baseUrl}/reservas`;
+
+    // Função para mostrar notificações
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `show ${type}`;
+      setTimeout(() => {
+        toast.className = '';
+      }, 3000);
+    }
+
+    // Função para carregar usuários
+    async function loadUsuarios() {
+      try {
+        const response = await fetch(apiUsuario);
+        const usuarios = await response.json();
+        const container = document.getElementById('usuariosListContainer');
+        
+        if (usuarios.length === 0) {
+          container.innerHTML = '<p class="empty-state">Nenhum usuário cadastrado</p>';
+          return;
+        }
+
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${usuarios.map(usuario => `
+              <tr>
+                <td>${usuario.id}</td>
+                <td>${usuario.nome}</td>
+                <td>${usuario.email}</td>
+                <td class="actions">
+                  <button class="btn-delete" onclick="deleteUsuario(${usuario.id})">Excluir</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+        container.innerHTML = '';
+        container.appendChild(table);
+      } catch (error) {
+        showToast('Erro ao carregar usuários', 'error');
+      }
+    }
+
+    // Função para carregar salas
+    async function loadSalas() {
+      try {
+        const response = await fetch(apiSala);
+        const salas = await response.json();
+        const container = document.getElementById('salasListContainer');
+        
+        if (salas.length === 0) {
+          container.innerHTML = '<p class="empty-state">Nenhuma sala cadastrada</p>';
+          return;
+        }
+
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${salas.map(sala => `
+              <tr>
+                <td>${sala.id}</td>
+                <td>${sala.nome}</td>
+                <td class="actions">
+                  <button class="btn-delete" onclick="deleteSala(${sala.id})">Excluir</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+        container.innerHTML = '';
+        container.appendChild(table);
+      } catch (error) {
+        showToast('Erro ao carregar salas', 'error');
+      }
+    }
+
+    // Função para carregar reservas
+    async function loadReservas() {
+      try {
+        const response = await fetch(apiReserva);
+        const reservas = await response.json();
+        const container = document.getElementById('reservasListContainer');
+        
+        if (reservas.length === 0) {
+          container.innerHTML = '<p class="empty-state">Nenhuma reserva cadastrada</p>';
+          return;
+        }
+
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuário</th>
+              <th>Sala</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reservas.map(reserva => `
+              <tr>
+                <td>${reserva.id}</td>
+                <td>${reserva.usuarioId}</td>
+                <td>${reserva.salaId}</td>
+                <td class="actions">
+                  <button class="btn-delete" onclick="deleteReserva(${reserva.id})">Excluir</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+        container.innerHTML = '';
+        container.appendChild(table);
+      } catch (error) {
+        showToast('Erro ao carregar reservas', 'error');
+      }
+    }
+
+    // Funções para excluir registros
+    async function deleteUsuario(id) {
+      try {
+        await fetch(`${apiUsuario}/${id}`, { method: 'DELETE' });
+        showToast('Usuário excluído com sucesso');
+        loadUsuarios();
+      } catch (error) {
+        showToast('Erro ao excluir usuário', 'error');
+      }
+    }
+
+    async function deleteSala(id) {
+      try {
+        await fetch(`${apiSala}/${id}`, { method: 'DELETE' });
+        showToast('Sala excluída com sucesso');
+        loadSalas();
+      } catch (error) {
+        showToast('Erro ao excluir sala', 'error');
+      }
+    }
+
+    async function deleteReserva(id) {
+      try {
+        await fetch(`${apiReserva}/${id}`, { method: 'DELETE' });
+        showToast('Reserva excluída com sucesso');
+        loadReservas();
+      } catch (error) {
+        showToast('Erro ao excluir reserva', 'error');
+      }
+    }
+
+    // Event Listeners para os formulários
+    document.getElementById('usuarioForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('nomeUsuario').value;
+      const email = document.getElementById('emailUsuario').value;
+
+      try {
+        await fetch(apiUsuario, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email })
+        });
+        showToast('Usuário cadastrado com sucesso');
+        document.getElementById('usuarioForm').reset();
+        loadUsuarios();
+      } catch (error) {
+        showToast('Erro ao cadastrar usuário', 'error');
+      }
+    });
+
+    document.getElementById('salaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('nomeSala').value;
+
+      try {
+        await fetch(apiSala, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome })
+        });
+        showToast('Sala cadastrada com sucesso');
+        document.getElementById('salaForm').reset();
+        loadSalas();
+      } catch (error) {
+        showToast('Erro ao cadastrar sala', 'error');
+      }
+    });
+
+    document.getElementById('reservaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const usuarioId = document.getElementById('usuarioId').value;
+      const salaId = document.getElementById('salaId').value;
+
+      try {
+        await fetch(apiReserva, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuarioId, salaId })
+        });
+        showToast('Reserva realizada com sucesso');
+        document.getElementById('reservaForm').reset();
+        loadReservas();
+      } catch (error) {
+        showToast('Erro ao realizar reserva', 'error');
+      }
+    });
+
+    // Carregar dados iniciais
+    loadUsuarios();
+    loadSalas();
+    loadReservas();
+  </script>
+</body>
+</html> 

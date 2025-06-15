@@ -1,131 +1,208 @@
+version: '3.8'
+
 services:
-  usuarios:
+  gateway:
     restart: always
-    container_name: usuarios
-    build:
-      context: ./usuario/
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://usuariosDb:5432/usuariosdb
-      - SPRING_DATASOURCE_USERNAME=admin
-      - SPRING_DATASOURCE_PASSWORD=admin
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_JPA_SHOW_SQL=true
-      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
-      - SERVER_PORT=8084
+    container_name: gateway
+    build: ./gateway/
+    ports:
+      - "8081:8081"
+    depends_on:
+      usuario:
+        condition: service_healthy
+      sala:
+        condition: service_healthy
+      reserva:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - net1
+      - net2
+      - net3
+
+  usuario:
+    restart: always
+    container_name: usuario
+    build: ./usuario/
     ports:
       - "8084:8084"
-    depends_on:
-      - Dbusuarios
-    networks:
-      - net_usuarios
-    
-  Dbusuarios:
-    image: postgres:latest
-    restart: always
-    container_name: dbusuarios
     environment:
-      POSTGRES_DB: usuariosdb
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-    ports:
-      - "5431:5432"
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://dbusuario:5432/dbusuario
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    depends_on:
+      dbusuario:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     networks:
-      - net_usuarios
-      - adminer-net
+      - net1
 
-  salas:
-    restart: always
-    container_name: salas
-    build:
-      context: ./sala/
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://dbsalas:5432/dbsalas
-      - SPRING_DATASOURCE_USERNAME=admin
-      - SPRING_DATASOURCE_PASSWORD=admin
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_JPA_SHOW_SQL=true
-      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
-      - SERVER_PORT=8082
-    ports:
-      - "8082:8082"
-    depends_on:
-      - Dbsalas
-    networks:
-      - net_salas
-  
-  Dbsalas:
+  dbusuario:
     image: postgres:latest
-    restart: always
-    container_name: dbsalas
+    container_name: dbusuario
     environment:
-      POSTGRES_DB: dbsalas
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      - POSTGRES_DB=dbusuario
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     ports:
       - "5432:5432"
+    volumes:
+      - dbusuario:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
-      - net_salas
-      - adminer-net
+      - net1
 
-  reservas:
+  sala:
     restart: always
-    container_name: reservas
-    build:
-      context: ./reserva/
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://Dbreservas:5432/dbreservas
-      - SPRING_DATASOURCE_USERNAME=admin
-      - SPRING_DATASOURCE_PASSWORD=admin
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_JPA_SHOW_SQL=true
-      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
-      - SERVER_PORT=8083
+    container_name: sala
+    build: ./sala/
     ports:
-      - "8083:8083"
-    depends_on:
-      - Dbreservas
-    networks:
-      - net_reservas
-  
-  Dbreservas:
-    image: postgres:latest
-    restart: always
-    container_name: dbreservas
+      - "8082:8082"
     environment:
-      POSTGRES_DB: dbreservas
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://dbsala:5432/dbsala
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    depends_on:
+      dbsala:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - net2
+
+  dbsala:
+    image: postgres:latest
+    container_name: dbsala
+    environment:
+      - POSTGRES_DB=dbsala
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     ports:
       - "5433:5432"
+    volumes:
+      - dbsala:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
-      - net_reservas
-      - adminer-net
+      - net2
+
+  reserva:
+    restart: always
+    container_name: reserva
+    build: ./reserva/
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://dbreserva:5432/dbreserva
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    depends_on:
+      dbreserva:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - net3
+
+  dbreserva:
+    image: postgres:latest
+    container_name: dbreserva
+    environment:
+      - POSTGRES_DB=dbreserva
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - dbreserva:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - net3
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - net1
+      - net2
+      - net3
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      gateway:
+        condition: service_started
+    networks:
+      - net1
+      - net2
+      - net3
 
   adminer:
-    container_name: adminer
+    image: adminer
     restart: always
-    image: adminer:latest
     ports:
       - "8080:8080"
     networks:
-      - adminer-net
-  
+      - net1
+      - net2
+      - net3
+
+volumes:
+  dbusuario:
+  dbsala:
+  dbreserva:
 
 networks:
-  adminer-net:
-    driver: bridge
-  net_usuarios:
-    driver: bridge
-  net_salas:
-    driver: bridge
-  net_reservas:
-    driver: bridge
+  net1:
+    name: msreserva-net1
+  net2:
+    name: msreserva-net2
+  net3:
+    name: msreserva-net3

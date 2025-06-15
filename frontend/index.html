@@ -2,110 +2,201 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Interface de Microserviços</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Reservas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
   <style>
-    body { font-family: Arial; margin: 20px; }
-    h2 { margin-top: 40px; }
-    form { margin-bottom: 20px; }
-    input, button { margin: 5px; padding: 6px; }
-    pre { background: #eee; padding: 10px; }
+    /* --- CSS Variables para fácil customização --- */
+    :root {
+      --bg-color: #f7f8fc;
+      --card-bg-color: #ffffff;
+      --primary-text-color: #2c3e50;
+      --secondary-text-color: #7f8c8d;
+      --accent-color: #3498db;
+      --accent-color-hover: #2980b9;
+      --delete-color: #e74c3c;
+      --delete-color-hover: #c0392b;
+      --border-color: #ecf0f1;
+      --shadow-color: rgba(0, 0, 0, 0.05);
+      --success-color: #2ecc71;
+      --error-color: #e74c3c;
+    }
+
+    /* --- Estilos Gerais --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--primary-text-color);
+      line-height: 1.6;
+    }
+
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    /* --- Layout dos Cards --- */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+    }
+
+    .card {
+      background-color: var(--card-bg-color);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px var(--shadow-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card h2 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+
+    /* --- Estilos de Formulário --- */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+    }
+
+    button {
+      padding: 12px 15px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    button.btn-primary { background-color: var(--accent-color); }
+    button.btn-primary:hover { background-color: var(--accent-color-hover); }
+
+    /* --- Estilos de Tabela e Ações --- */
+    .list-container {
+        flex-grow: 1;
+        max-height: 350px;
+        overflow-y: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    th, td {
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    th {
+        font-weight: 600;
+        color: var(--secondary-text-color);
+        position: sticky;
+        top: 0;
+        background: var(--card-bg-color);
+    }
+    td.actions { display: flex; justify-content: flex-end; }
+    .btn-delete {
+        background-color: var(--delete-color);
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+    .btn-delete:hover { background-color: var(--delete-color-hover); }
+    .empty-state { text-align: center; padding: 20px; color: var(--secondary-text-color); }
+
+    /* --- Notificação (Toast) --- */
+    #toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 500; opacity: 0; visibility: hidden; transform: translateY(20px); transition: all 0.3s ease-in-out; z-index: 1000; }
+    #toast.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    #toast.success { background-color: var(--success-color); }
+    #toast.error { background-color: var(--error-color); }
+
   </style>
 </head>
 <body>
-  <h1>Microserviços - Interface</h1>
 
-  <!-- Usuário -->
-  <h2>Usuários</h2>
-  <form id="usuarioForm">
-    <input type="text" id="nomeUsuario" placeholder="Nome" required />
-    <input type="email" id="emailUsuario" placeholder="Email" required />
-    <button type="submit">Cadastrar Usuário</button>
-  </form>
-  <button onclick="listarUsuarios()">Listar Usuários</button>
-  <pre id="usuariosList"></pre>
+  <div class="dashboard-container">
+    <h1>Sistema de Reservas</h1>
 
-  <!-- Sala -->
-  <h2>Salas</h2>
-  <form id="salaForm">
-    <input type="text" id="nomeSala" placeholder="Nome da Sala" required />
-    <button type="submit">Cadastrar Sala</button>
-  </form>
-  <button onclick="listarSalas()">Listar Salas</button>
-  <pre id="salasList"></pre>
+    <div class="cards-grid">
+      <!-- Card de Usuários -->
+      <div class="card">
+        <h2>Usuários</h2>
+        <form id="usuarioForm">
+          <input type="text" id="nomeUsuario" placeholder="Nome do usuário" required />
+          <input type="email" id="emailUsuario" placeholder="Email do usuário" required />
+          <input type="date" id="dataNascimentoUsuario" placeholder="Data de nascimento do usuário" required />
+          <button type="submit" class="btn-primary">Cadastrar Usuário</button>
+        </form>
+        <div id="usuariosListContainer" class="list-container">
+            <p class="empty-state">Carregando usuários...</p>
+        </div>
+      </div>
 
-  <!-- Reserva -->
-  <h2>Reservas</h2>
-  <form id="reservaForm">
-    <input type="number" id="usuarioId" placeholder="ID do Usuário" required />
-    <input type="number" id="salaId" placeholder="ID da Sala" required />
-    <button type="submit">Fazer Reserva</button>
-  </form>
-  <button onclick="listarReservas()">Listar Reservas</button>
-  <pre id="reservasList"></pre>
+      <!-- Card de Salas -->
+      <div class="card">
+        <h2>Salas</h2>
+        <form id="salaForm">
+          <input type="text" id="nomeSala" placeholder="Nome da sala" required />
+          <input type="number" id="capacidadeSala" placeholder="Capacidade da sala" required />
+          <button type="submit" class="btn-primary">Cadastrar Sala</button>
+        </form>
+        <div id="salasListContainer" class="list-container">
+            <p class="empty-state">Carregando salas...</p>
+        </div>
+      </div>
 
-  <script>
-    const apiUsuario = 'http://localhost:8084/usuarios';
-    const apiSala = 'http://localhost:8082/salas';
-    const apiReserva = 'http://localhost:8083/reservas';
+      <!-- Card de Reservas -->
+      <div class="card">
+        <h2>Reservas</h2>
+        <form id="reservaForm">
+          <input type="number" id="usuarioId" placeholder="ID do Usuário" required />
+          <input type="number" id="salaId" placeholder="ID da Sala" required />
+          <input type="datetime-local" id="dataHoraReserva" placeholder="Data e hora da reserva" required />
+          <button type="submit" class="btn-primary">Fazer Reserva</button>
+        </form>
+        <div id="reservasListContainer" class="list-container">
+            <p class="empty-state">Carregando reservas...</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    // Usuário
-    document.getElementById('usuarioForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const nome = document.getElementById('nomeUsuario').value;
-      const email = document.getElementById('emailUsuario').value;
+  <div id="toast"></div>
 
-      await fetch(apiUsuario, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, email })
-      });
-      listarUsuarios();
-    });
-
-    async function listarUsuarios() {
-      const res = await fetch(apiUsuario);
-      const data = await res.json();
-      document.getElementById('usuariosList').textContent = JSON.stringify(data, null, 2);
-    }
-
-    // Sala
-    document.getElementById('salaForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const nome = document.getElementById('nomeSala').value;
-
-      await fetch(apiSala, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome })
-      });
-      listarSalas();
-    });
-
-    async function listarSalas() {
-      const res = await fetch(apiSala);
-      const data = await res.json();
-      document.getElementById('salasList').textContent = JSON.stringify(data, null, 2);
-    }
-
-    // Reserva
-    document.getElementById('reservaForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const usuario_id = document.getElementById('usuarioId').value;
-      const sala_id = document.getElementById('salaId').value;
-
-      await fetch(apiReserva, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario_id, sala_id })
-      });
-      listarReservas();
-    });
-
-    async function listarReservas() {
-      const res = await fetch(apiReserva);
-      const data = await res.json();
-      document.getElementById('reservasList').textContent = JSON.stringify(data, null, 2);
-    }
-  </script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

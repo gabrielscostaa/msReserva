@@ -1,10 +1,12 @@
-FROM maven:3.8.4-openjdk-17-slim AS build
+FROM maven:3.9.8-amazoncorretto-21 AS build
 WORKDIR /app
-COPY . .
+COPY pom.xml .
+COPY src ./src
 RUN mvn clean package -DskipTests
 
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
-COPY --from=build /app/target/usuario*.jar /app/usuario.jar
-EXPOSE 8082
-ENTRYPOINT ["java", "-jar", "usuario.jar"]
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8084
+ENTRYPOINT ["java", "-jar", "app.jar"]
