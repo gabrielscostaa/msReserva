@@ -172,18 +172,6 @@ services:
       - net2
       - net3
 
-  frontend:
-    build: ./frontend
-    ports:
-      - "80:80"
-    depends_on:
-      gateway:
-        condition: service_started
-    networks:
-      - net1
-      - net2
-      - net3
-
   adminer:
     image: adminer
     restart: always
